@@ -2,6 +2,24 @@ from bs4 import BeautifulSoup
 import requests
 import smtplib
 from email.message import EmailMessage
+import csv
+from datetime import datetime
+import os
+
+LOG_FILE = "price_history.csv"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# print(BASE_DIR)
+LOG_FILE = os.path.join(BASE_DIR, "price_history.csv")
+
+def log_price(title, url, price):
+    file_exists = os.path.isfile(LOG_FILE)
+    with open(LOG_FILE, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(["timestamp", "title", "url", "price"])
+        writer.writerow([datetime.now().isoformat(), title, url, price])
+
+
 
 # List of (product URL, threshold price)
 PRODUCTS = [
@@ -61,6 +79,8 @@ def check_all_prices():
         try:
             title, current_price = get_price(url)
             print(f"{title} is currently ${current_price:.2f}")
+            
+            log_price(title,url,current_price)
 
             if current_price <= threshold:
                 subject = f"Price Alert: {title} is ${current_price:.2f}"
